@@ -7,43 +7,50 @@ import kha.Assets;
 import kha.Image;
 import kha.Color;
 import kha.Scaler;
+import kha.input.Surface;
+import kha.input.Mouse;
 
 class Project {
 	public static inline var SCREEN_WIDTH = 1024;
 	public static inline var SCREEN_HEIGHT = 768;
+	private static inline var BUNNY_COUNT = 50;	
 	
 	private static var bgColor = Color.fromValue(0xAAAAAA);
-	
-	private var lastTime: Float;
-	private var currentTime: Float;
-	
 	private var initialized = false;
-	private var backbuffer: Image;
+	private var backbuffer: Image;	
+	private var bunnies: Array<Bunny>;	 
 	
-	private var bunnies: Array<Bunny>; 
-	
-	public function new() {
-		lastTime = 0;
-		currentTime = 0;
-		
-		Assets.loadEverything(loadFinish);
-		
+	public function new() {				
+		Assets.loadEverything(loadFinish);		
 		System.notifyOnRender(render);
 		Scheduler.addTimeTask(update, 0, 1 / 30);
 	}
 	
 	private function loadFinish() {
-		backbuffer = Image.createRenderTarget(SCREEN_WIDTH, SCREEN_HEIGHT);
-		
-		bunnies = new Array<Bunny>();
-		var asset = Assets.images.bunny;
-		for (i in 0...3000) {		
-			var x = Math.round(Math.random() * (SCREEN_WIDTH - asset.width));	
-			var y = Math.round(Math.random() * (SCREEN_HEIGHT - asset.height));
-			bunnies.push(new Bunny(x, y, asset));
-		}
-				
 		initialized = true;
+		
+		backbuffer = Image.createRenderTarget(SCREEN_WIDTH, SCREEN_HEIGHT);		
+		bunnies = new Array<Bunny>();										
+		Surface.get().notify(touchStart, null, null);		
+		Mouse.get().notify(touchStart, null, null, null);		
+		addBunnies(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+	}
+	
+	private function addBunnies(x: Float, y: Float) {
+		var asset = Assets.images.bunny;
+		for (i in 0...BUNNY_COUNT) {		
+			var bx = Math.round(x + Math.random() * 100);	
+			var by = Math.round(y + Math.random() * 100);
+			bunnies.push(new Bunny(bx, by, asset));
+		}
+	}
+	
+	private function touchStart(index: Int, x: Int, y: Int) {
+		if (!initialized) {
+			return;
+		}	
+		
+		addBunnies(x, y);
 	}
 
 	function update(): Void {
